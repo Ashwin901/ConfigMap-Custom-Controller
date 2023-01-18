@@ -27,6 +27,8 @@ func main() {
 
 	ch := make(chan struct{}) // used as a stop channel
 
+	controller := newController(clientset, factory.Core().V1().ConfigMaps())
+
 	// initialising all the requested informers
 	factory.Start(ch)
 }
