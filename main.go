@@ -31,4 +31,7 @@ func main() {
 
 	// initialising all the requested informers
 	factory.Start(ch)
+
+	// start the controller
+	controller.Run(ch)
 }
