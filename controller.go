@@ -3,9 +3,11 @@ package main
 import (
 	"context"
 	"fmt"
+	"reflect"
 	"time"
 
 	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/wait"
 	coreInformers "k8s.io/client-go/informers/core/v1"
@@ -80,7 +82,7 @@ func (c *controller) processQueue() bool {
 		return false
 	}
 
-	// TODO: change this
+	// TODO: change this, ignore specific namespaces
 	if ns != "dev" {
 		c.queue.Forget(item)
 		return true
@@ -104,11 +106,20 @@ func (c *controller) processQueue() bool {
 	// check if configmap with same name already exists, and if yes compare the data
 	for _, namespace := range namespaces.Items {
 		if namespace.Name == "prod" && configMap.Name == "app-cm" {
-			_, err = c.clientset.CoreV1().ConfigMaps(namespace.Name).Create(context.Background(), createConfigMap(namespace.Name, name, configMap.Data), metav1.CreateOptions{})
+
+			cm, err := c.clientset.CoreV1().ConfigMaps(namespace.Name).Get(context.Background(), configMap.Name, metav1.GetOptions{})
+
+			if errors.IsNotFound(err) {
+				cm, err = c.clientset.CoreV1().ConfigMaps(namespace.Name).Create(context.Background(), createConfigMap(namespace.Name, name, configMap.Data), metav1.CreateOptions{})
+			}
 
 			if err != nil {
-				fmt.Println("Error while creating config map using lister", err)
+				fmt.Println("Error while creating/getting config map using lister", err)
 				return false
+			}
+
+			if reflect.DeepEqual(cm.Data, configMap.Data) {
+				_, err = c.clientset.CoreV1().ConfigMaps(namespace.Name).Update(context.Background(), createConfigMap(namespace.Name, name, configMap.Data), metav1.UpdateOptions{})
 			}
 		}
 	}
