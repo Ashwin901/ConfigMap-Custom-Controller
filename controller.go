@@ -77,6 +77,7 @@ func contains(s []string, str string) bool {
 
 func (c *controller) processQueue() bool {
 
+	// namespaces that we will not be considering
 	ignoredNamespaces := []string{"default", "kube-system", "kube-public", "kube-node-lease", "local-path-storage"}
 
 	item, shutdown := c.queue.Get()
@@ -95,7 +96,7 @@ func (c *controller) processQueue() bool {
 		return false
 	}
 
-	// TODO: change this, ignore specific namespaces
+	// ignore config maps created in specific namespaces
 	if contains(ignoredNamespaces, ns) {
 		c.queue.Forget(item)
 		return true
@@ -116,7 +117,7 @@ func (c *controller) processQueue() bool {
 		return false
 	}
 
-	// check if configmap with same name already exists, and if yes compare the data
+	// TODO: check if configmap with same name already exists, and if yes compare the data
 	for _, namespace := range namespaces.Items {
 		if !contains(ignoredNamespaces, namespace.Name) {
 
@@ -156,7 +157,7 @@ func (c *controller) handleAdd(obj interface{}) {
 	key, err := cache.MetaNamespaceKeyFunc(obj)
 
 	if err != nil {
-		// log error
+		fmt.Println("Error while creating key for object")
 		return
 	}
 
@@ -168,7 +169,7 @@ func (c *controller) handleDelete(obj interface{}) {
 	key, err := cache.MetaNamespaceKeyFunc(obj)
 
 	if err != nil {
-		// log error
+		fmt.Println("Error while creating key for object")
 		return
 	}
 
