@@ -65,7 +65,20 @@ func (c *controller) worker() {
 	}
 }
 
+func contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 func (c *controller) processQueue() bool {
+
+	ignoredNamespaces := []string{"default", "kube-system", "kube-public", "kube-node-lease", "local-path-storage"}
+
 	item, shutdown := c.queue.Get()
 
 	if shutdown {
@@ -83,7 +96,7 @@ func (c *controller) processQueue() bool {
 	}
 
 	// TODO: change this, ignore specific namespaces
-	if ns != "dev" {
+	if contains(ignoredNamespaces, ns) {
 		c.queue.Forget(item)
 		return true
 	}
@@ -105,7 +118,7 @@ func (c *controller) processQueue() bool {
 
 	// check if configmap with same name already exists, and if yes compare the data
 	for _, namespace := range namespaces.Items {
-		if namespace.Name == "prod" && configMap.Name == "app-cm" {
+		if !contains(ignoredNamespaces, namespace.Name) {
 
 			cm, err := c.clientset.CoreV1().ConfigMaps(namespace.Name).Get(context.Background(), configMap.Name, metav1.GetOptions{})
 
