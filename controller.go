@@ -54,7 +54,8 @@ func (c *controller) Run(ch <-chan struct{}) {
 		fmt.Println("Caches not synced")
 	}
 
-	go wait.Until(c.worker, 1*time.Second, ch) // we can have multiple workers if required, in this case we are just using one worker
+	// we can have multiple workers if required, in this case we are just using one worker
+	go wait.Until(c.worker, 1*time.Second, ch)
 
 	<-ch // blocking operation
 }
@@ -128,7 +129,7 @@ func (c *controller) processQueue() bool {
 			}
 
 			if err != nil {
-				fmt.Println("Error while creating/getting config map using lister", err)
+				fmt.Println("Error while creating/getting config map: ", err)
 				return false
 			}
 
