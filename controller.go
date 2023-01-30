@@ -38,8 +38,8 @@ func newController(clientset kubernetes.Interface, congifmapInformer coreInforme
 	// adding event handlers for certain events
 	congifmapInformer.Informer().AddEventHandler(
 		cache.ResourceEventHandlerFuncs{
-			AddFunc:    controller.handleAdd,
-			DeleteFunc: controller.handleDelete,
+			AddFunc:    controller.handleEvent,
+			DeleteFunc: controller.handleEvent,
 		},
 	)
 
@@ -153,20 +153,8 @@ func createConfigMap(ns, name string, data map[string]string) *corev1.ConfigMap 
 	}
 }
 
-func (c *controller) handleAdd(obj interface{}) {
+func (c *controller) handleEvent(obj interface{}) {
 	fmt.Println("Config map added")
-	key, err := cache.MetaNamespaceKeyFunc(obj)
-
-	if err != nil {
-		fmt.Println("Error while creating key for object")
-		return
-	}
-
-	c.queue.Add(key)
-}
-
-func (c *controller) handleDelete(obj interface{}) {
-	fmt.Println("Config map deleted")
 	key, err := cache.MetaNamespaceKeyFunc(obj)
 
 	if err != nil {
