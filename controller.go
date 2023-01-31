@@ -107,6 +107,11 @@ func (c *controller) processQueue() bool {
 	configMap, err := c.lister.ConfigMaps(ns).Get(name)
 
 	if err != nil {
+
+		if errors.IsNotFound(err) {
+			// TODO: handle delete event here - If parent config map is deleted then generated config maps should also be deleted
+		}
+
 		fmt.Println("Error while getting config map using lister ", err)
 		return false
 	}
